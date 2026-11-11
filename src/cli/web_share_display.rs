@@ -75,7 +75,10 @@ fn render_created_share_with_style(
         return Ok(too_narrow_output(created, width));
     }
     let height = render_height(width, &cards, link_mode, qr_mode);
-    let mut terminal = Terminal::new(TestBackend::new(width, height))?;
+    // ratatui 0.30: TestBackend's error type is Infallible, so there is no
+    // error to propagate.
+    let mut terminal =
+        Terminal::new(TestBackend::new(width, height)).unwrap_or_else(|never| match never {});
     terminal.draw(|frame| {
         let area = frame.area();
         let outer = Block::default()
@@ -101,7 +104,8 @@ fn render_created_share_with_style(
         render_header(frame, chunks[0], created);
         render_cards(frame, chunks[1], &cards, link_mode, qr_mode);
         render_footer(frame, chunks[2], created);
-    })?;
+    })
+    .unwrap_or_else(|never| match never {});
 
     let links = cards.iter().map(|card| card.url).collect::<Vec<_>>();
     let mut output = match style {
